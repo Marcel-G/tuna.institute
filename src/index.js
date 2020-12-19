@@ -82,6 +82,10 @@ class Polygon extends Entity {
   }
 }
 
+/**
+ * Implements Separating Axis Theorem on entity
+ * https://www.gamedev.net/articles/programming/general-and-gameplay-programming/2d-rotated-rectangle-collision-r2604/
+ */
 class Collidable {
   entity = new Entity();
   constructor(entity) {
@@ -153,10 +157,7 @@ class Collidable {
       };
       // project polygon under axis
       const { min: minA, max: maxA } = this.projectInAxis(axis.x, axis.y);
-      const { min: minB, max: maxB } = otherCollider.projectInAxis(
-        axis.x,
-        axis.y
-      );
+      const { min: minB, max: maxB } = otherCollider.projectInAxis(axis.x, axis.y);
       if (this.intervalDistance(minA, maxA, minB, maxB) > 0) {
         return false;
       }
@@ -164,10 +165,55 @@ class Collidable {
     return true;
   }
 
+  /**
+   * 
+   * @param {Vector} p1 
+   * @param {Vector} p2 
+   * @param {Vector} p3 
+   * @param {Vector} p4 
+   */
+  checkLineIntersection(p1, p2, p3, p4) {
+    const denominator = ((p4.y - p3.y) * (p2.x - p1.x)) - ((p4.x - p3.x) * (p2.y - p1.y));
+    if (denominator == 0) {
+        return null;
+    }
+    let a = p1.y - p3.y;
+    let b = p1.x - p3.x;
+    const numerator1 = ((p4.x - p3.x) * a) - ((p4.y - p3.y) * b);
+    const numerator2 = ((p2.x - p1.x) * a) - ((p2.y - p1.y) * b);
+    a = numerator1 / denominator;
+    b = numerator2 / denominator;
+
+    if ((a > 0 && a < 1) && (b > 0 && b < 1)) {
+      return new Vector(
+        p1.x + (a * (p2.x - p1.x)),
+        p1.y + (a * (p2.y - p1.y))
+      );
+    }
+
+    return null;
+  };
+
+  intersectionPointsWith(otherPolygon) {
+    const points = [];
+    this.entity.vertices.forEach((p1, index, vertices) => {
+      const p2 = vertices[index + 1] || vertices[0];
+      otherPolygon.vertices.forEach((p3, index, vertices) => {
+        const p4 = vertices[index + 1] || vertices[0];
+        const point = this.checkLineIntersection(p1, p2, p3, p4);
+        if (point) { points.push(point); }
+      })
+    });
+    return points;
+  }
+
   testCollisions(collidables) {
-    this.isColliding = collidables.some((collidable) =>
-      this.testWith(collidable)
-    );
+    this.points = collidables.map((collidable) => {
+      if (this.testWith(collidable)) {
+        return this.intersectionPointsWith(collidable)
+      }
+      return []
+    }).flat();
   }
 
   update(delta, context, entities) {
@@ -217,13 +263,20 @@ class Tuna extends Polygon {
     for (let vertex of rest) {
       context.lineTo(vertex.x, vertex.y);
     }
-    if (this.collider.isColliding) {
-      context.fillStyle = "red";
+    if (this.collider.points.length) {
+      context.fillStyle = "green";
     } else {
       context.fillStyle = "black";
     }
     context.closePath();
     context.fill();
+
+    for (const point of this.collider.points) {
+      context.fillStyle = 'red';
+      context.beginPath();
+      context.arc(point.x, point.y, 5, 0, 2 * Math.PI, true);
+      context.fill();
+    }
   }
 }
 
