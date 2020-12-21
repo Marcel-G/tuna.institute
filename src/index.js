@@ -10,7 +10,7 @@ class Vector {
     this.y = y;
   }
   /**
-   * 
+   *
    * @param {Vector} vec1
    * @param {Vector} vec2
    * @returns {number}
@@ -20,24 +20,21 @@ class Vector {
   }
 
   normalise() {
-    const s = this.length()
+    const s = this.length();
     return new Vector(this.x / s, this.y / s);
   }
 
   length() {
-    return Math.sqrt(Vector.dot(this, this))
+    return Math.sqrt(Vector.dot(this, this));
   }
 
   /**
-   * 
+   *
    * @param {Vector} normal
    */
   reflect(normal) {
     const len = Vector.dot(this, normal) * 2;
-    return new Vector(
-      this.x - normal.x * len,
-      this.y - normal.y * len
-    )
+    return new Vector(this.x - normal.x * len, this.y - normal.y * len);
   }
 }
 
@@ -151,23 +148,28 @@ class Collidable {
   }
 
   /**
-   * 
+   *
    * @param {Vector} axis
-   * @returns {{ min: number, max: number }}
+   * @returns {{ min: number, max: number, minPoint: Vector, maxPoint: Vector }}
    */
   projectInAxis(axis) {
     let min = Infinity;
     let max = -Infinity;
+    let minPoint = null;
+    let maxPoint = null;
     for (let i = 0; i < this.entity.vertices.length; i++) {
-      const projection = Vector.dot(this.entity.vertices[i], axis) / axis.length();
+      const projection =
+        Vector.dot(this.entity.vertices[i], axis) / axis.length();
       if (projection > max) {
         max = projection;
+        maxPoint = this.entity.vertices[i]
       }
       if (projection < min) {
         min = projection;
+        minPoint = this.entity.vertices[i]
       }
     }
-    return { min, max };
+    return { min, max, minPoint, maxPoint };
   }
 
   intervalDistance(minA, maxA, minB, maxB) {
@@ -177,8 +179,20 @@ class Collidable {
     return minA - maxB;
   }
 
+  pointSelection(minA, minB, minPoint, maxPoint) {
+    if (minA < minB) {
+      return minPoint;
+    }
+    return maxPoint;
+  }
+
   testWith(otherPolygon) {
     const otherCollider = otherPolygon.collider;
+    const shortest = {
+      distance: -Infinity,
+      normal: null,
+      point: null
+    };
     // get all edges
     const edges = [];
     for (let i = 0; i < this.edges.length; i++) {
@@ -190,49 +204,76 @@ class Collidable {
     // build all axis and project
     for (let i = 0; i < edges.length; i++) {
       // get axis
-      
-      const axis = new Vector(
-        -edges[i].normalise().y,
-        edges[i].normalise().x,
-      )
+
+      const axis = new Vector(-edges[i].normalise().y, edges[i].normalise().x);
       // project polygon under axis
-      const { min: minA, max: maxA } = this.projectInAxis(axis);
-      const { min: minB, max: maxB } = otherCollider.projectInAxis(axis);
-      if (this.intervalDistance(minA, maxA, minB, maxB) > 0) {
+      const { min: minA, max: maxA, minPoint: minPointA, maxPoint: maxPointA } = this.projectInAxis(axis);
+      const { min: minB, max: maxB, minPoint: minPointB, maxPoint: maxPointB } = otherCollider.projectInAxis(axis);
+      const distance = this.intervalDistance(minA, maxA, minB, maxB);
+      const point = i > this.edges.length -1
+        ? this.pointSelection(minA, minB, maxPointA, minPointA)
+        : this.pointSelection(minA, minB, minPointB, maxPointB);
+      if (distance > 0) {
         return false;
+      } else if (distance > shortest.distance) {
+        shortest.distance = distance;
+        shortest.normal = i > this.edges.length -1
+          ? minA < minB ? axis.normalise() : this.invert(axis.normalise())
+          : minA < minB ? this.invert(axis.normalise()) : axis.normalise()
+        shortest.point = new Vector(
+          point.x + (shortest.normal.x * distance),
+          point.y + (shortest.normal.y * distance)
+        );
       }
     }
-    return true;
+    return shortest;
   }
 
   /**
    * 
-   * @param {Vector} p1 
-   * @param {Vector} p2 
-   * @param {Vector} p3 
-   * @param {Vector} p4 
+   * @param {Vector} point 
+   */
+  testPoint(point) {
+
+
+  }
+
+  /**
+   * 
+   * @param {Vector} vector 
+   */
+  invert(vector) {
+    vector.x *= -1;
+    vector.y *= -1;
+    return vector;
+  }
+
+  /**
+   *
+   * @param {Vector} p1
+   * @param {Vector} p2
+   * @param {Vector} p3
+   * @param {Vector} p4
    */
   checkLineIntersection(p1, p2, p3, p4) {
-    const denominator = ((p4.y - p3.y) * (p2.x - p1.x)) - ((p4.x - p3.x) * (p2.y - p1.y));
+    const denominator =
+      (p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y);
     if (denominator == 0) {
-        return null;
+      return null;
     }
     let a = p1.y - p3.y;
     let b = p1.x - p3.x;
-    const numerator1 = ((p4.x - p3.x) * a) - ((p4.y - p3.y) * b);
-    const numerator2 = ((p2.x - p1.x) * a) - ((p2.y - p1.y) * b);
+    const numerator1 = (p4.x - p3.x) * a - (p4.y - p3.y) * b;
+    const numerator2 = (p2.x - p1.x) * a - (p2.y - p1.y) * b;
     a = numerator1 / denominator;
     b = numerator2 / denominator;
 
-    if ((a > 0 && a < 1) && (b > 0 && b < 1)) {
-      return new Vector(
-        p1.x + (a * (p2.x - p1.x)),
-        p1.y + (a * (p2.y - p1.y))
-      );
+    if (a > 0 && a < 1 && b > 0 && b < 1) {
+      return new Vector(p1.x + a * (p2.x - p1.x), p1.y + a * (p2.y - p1.y));
     }
 
     return null;
-  };
+  }
 
   intersectionPointsWith(otherPolygon) {
     const points = [];
@@ -246,38 +287,55 @@ class Collidable {
           point.normal = this.getNormal([p3, p4]);
           points.push(point);
         }
-      })
+      });
     });
     return points;
   }
 
   testCollisions(collidables) {
-    this.contactPoints = collidables
-      .map((collidable) => {
-        if (this.testWith(collidable)) {
-          return this.intersectionPointsWith(collidable)
+    const collisions = [];
+    for (const collidable of collidables) {
+      const result = this.testWith(collidable);
+      if (result) {
+        collisions.push(result);
+        if (Vector.dot(this.entity.v, result.normal) >= 0) {
+          const reflection = this.entity.v.reflect(result.normal)
+
+          const penetration = new Vector(
+            result.distance * result.normal.x,
+            result.distance * result.normal.y
+          )
+          // this.entity.v.x -= penetration.x;
+          // this.entity.v.y -= penetration.y;
+
+          this.entity.v.x += reflection.x;
+          this.entity.v.y += reflection.y;
         }
-        return []
-      });
+
+        this.entity.v.x *= 0.9;
+        this.entity.v.y *= 0.9;
+      }
+    }
+    this.collisions = collisions;
 
     // for (const point of this.contactPoints.map(this.getPointsCentroid).filter(Boolean)) {
-    this.entity.v = this.contactPoints.flat()
-    .map((point) => {
-      return this.collisionResponse(
-        this.entity.p,
-        this.entity.v,
-        this.entity.av,
-        point,
-        point.normal
-      )
-    })
-    .reduce((newV, component) => {
-      newV.x += component.x;
-      newV.y += component.y;
-      // newV.x += component.x * 2 * this.entity.e;
-      // newV.y += component.y * 2 * this.entity.e;
-      return newV
-    }, this.entity.v)
+    // this.entity.v = this.contactPoints.flat()
+    // .map((point) => {
+    //   return this.collisionResponse(
+    //     this.entity.p,
+    //     this.entity.v,
+    //     this.entity.av,
+    //     point,
+    //     point.normal
+    //   )
+    // })
+    // .reduce((newV, component) => {
+    //   newV.x += component.x;
+    //   newV.y += component.y;
+    //   // newV.x += component.x * 2 * this.entity.e;
+    //   // newV.y += component.y * 2 * this.entity.e;
+    //   return newV
+    // }, this.entity.v)
   }
 
   collisionResponse(
@@ -285,17 +343,14 @@ class Collidable {
     v, // velocity of object
     a, // the angular velocity of the object
     p, // point of contact with line
-    n  // normalized normal of line
+    n // normalized normal of line
   ) {
     // //  Make a vector from center mass to contact point
     // cp = p - c;
     const cp = new Vector(p.x - c.x, p.y - c.y);
 
     // //  Total velocity at contact point (add angular effect)
-    const pv = new Vector(
-      v.x - cp.y * a,
-      v.y + cp.x * a
-    )
+    const pv = new Vector(v.x - cp.y * a, v.y + cp.x * a);
 
     // //  Reflect point of contact velocity off the line (wall)
 
@@ -305,7 +360,6 @@ class Collidable {
     }
 
     return v.reflect(n);
-
 
     // // magic happens..
     // const av = (cp.x * v.y - cp.y * v.x) / (cp.x * cp.x + cp.y * cp.y);
@@ -320,8 +374,8 @@ class Collidable {
   getNormal(points) {
     if (points.length == 2) {
       const [p1, p2] = points;
-      const dx = p2.x - p1.x
-      const dy = p2.y - p1.y
+      const dx = p2.x - p1.x;
+      const dy = p2.y - p1.y;
       return new Vector(-dy, dx).normalise();
     }
     return null;
@@ -330,15 +384,15 @@ class Collidable {
   getPointsCentroid(points) {
     if (!points.length) return null;
     const centroid = points.reduce((centroid, point) => {
-      centroid.x += point.x
-      centroid.y += point.y
-      return centroid
-    } , new Vector(0, 0))
+      centroid.x += point.x;
+      centroid.y += point.y;
+      return centroid;
+    }, new Vector(0, 0));
     centroid.x /= points.length;
     centroid.y /= points.length;
-    centroid.normal = points[0].normal
+    centroid.normal = points[0].normal;
     return centroid;
-  } 
+  }
 
   update(delta, context, entities) {
     this.edges = this.getEdges(this.entity.vertices);
@@ -351,25 +405,33 @@ class Collidable {
   }
 
   render(delta, context, entities) {
-    // if (this.contactPoint) {
-    //   context.fillStyle = 'blue';
-    //   context.beginPath();
-    //   context.arc(this.contactPoint.x, this.contactPoint.y, 5, 0, 2 * Math.PI, true);
-    //   context.fill();
-    // }
-    for (const point of this.contactPoints.flat()) {
-      context.fillStyle = 'yellow';
+    for (const collision of this.collisions) {
+      const { point, normal, distance } = collision;
+      context.fillStyle = 'blue';
       context.beginPath();
       context.arc(point.x, point.y, 5, 0, 2 * Math.PI, true);
       context.fill();
       context.beginPath();
       context.moveTo(point.x, point.y);
       context.lineTo(
-        point.x + (point.normal.x * 20),
-        point.y + (point.normal.y * 20)
+        point.x - (normal.x * distance),
+        point.y - (normal.y * distance)
       );
       context.stroke()
     }
+    // for (const point of this.contactPoints.flat()) {
+    //   context.fillStyle = 'yellow';
+    //   context.beginPath();
+    //   context.arc(point.x, point.y, 5, 0, 2 * Math.PI, true);
+    //   context.fill();
+    //   context.beginPath();
+    //   context.moveTo(point.x, point.y);
+    //   context.lineTo(
+    //     point.x + (point.normal.x * 20),
+    //     point.y + (point.normal.y * 20)
+    //   );
+    //   context.stroke()
+    // }
   }
 }
 
@@ -379,19 +441,19 @@ class Dynamic {
   entity = new Entity();
   constructor(entity) {
     this.entity = entity;
+    // this.entity.a = -32 + Math.random();
     this.entity.av = Math.random();
   }
   clamp(number, limit) {
-    return Math.max(Math.min(number, limit), -limit)
+    return Math.max(Math.min(number, limit), -limit);
   }
   preUpdate(delta, context, entities) {
-    // this.entity.v.x += gravity.x
-    // this.entity.v.y += gravity.y
+    // this.entity.v.x += gravity.x;
+    // this.entity.v.y += gravity.y;
 
     // this.entity.av = this.clamp(this.entity.av, 5);
     this.entity.v.x = this.clamp(this.entity.v.x, 5);
     this.entity.v.y = this.clamp(this.entity.v.y, 5);
-
   }
   update(delta, context, entities) {
     this.entity.a += this.entity.av;
@@ -433,7 +495,7 @@ class Tuna extends Polygon {
 
 class Boundary extends Polygon {
   constructor(position) {
-    super(position, 280, 280);
+    super(position, 500, 10);
     this.collider = new Collidable(this);
   }
   update(delta, context, entities) {
@@ -512,18 +574,22 @@ const main = () => {
   const context = canvas.getContext("2d");
   context.fillStyle = "#ffc0cb";
   context.fillRect(0, 0, canvas.width, canvas.height);
-  document.addEventListener('click', () => {
+  document.addEventListener("click", () => {
     if (game.running) {
       game.stop();
     } else {
       game.start();
     }
-  })
+  });
 
   const game = new Game(canvas);
   game.start();
-  game.spawn(new Boundary(new Vector(canvas.clientWidth / 2, canvas.clientHeight / 2)));
-  game.spawn( new Tuna(new Vector(canvas.clientWidth / 2, canvas.clientHeight / 2)));
+  game.spawn(
+    new Boundary(new Vector(canvas.clientWidth / 2, canvas.clientHeight - 100))
+  );
+  game.spawn(
+    new Tuna(new Vector(canvas.clientWidth / 2, canvas.clientHeight / 2))
+  );
   game.spawn(
     new Tuna(new Vector(canvas.clientWidth / 3, canvas.clientHeight / 3))
   );
