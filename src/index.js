@@ -27,12 +27,10 @@ const main = () => {
   game.spawn(
     new Boundary(new Vector(canvas.clientWidth / 2, canvas.clientHeight - 100))
   );
-  game.spawn(
-    new Tuna(new Vector(canvas.clientWidth / 2, canvas.clientHeight / 2))
-  );
-  game.spawn(
-    new Tuna(new Vector(canvas.clientWidth / 3, canvas.clientHeight / 3))
-  );
+  setInterval(() => {
+    const offset = new Vector(Math.random() * canvas.clientWidth, 0);
+    game.spawn(new Tuna(offset));
+  }, 500)
 };
 
 document.addEventListener("DOMContentLoaded", main);

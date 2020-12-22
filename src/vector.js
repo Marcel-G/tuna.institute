@@ -72,6 +72,26 @@ export class Vector {
       vec1.y * val,
     )
   }
+  /**
+   * @returns {Vector}
+   */
+  normal() {
+    return new Vector(
+      -this.y,
+      this.x
+    )
+  }
+  /**
+   * 
+   * @param {number} limit 
+   * @returns {Vector}
+   */
+  clamp(limit) {
+    return new Vector(
+      Math.max(Math.min(this.x, limit), -limit),
+      Math.max(Math.min(this.y, limit), -limit)
+    )
+  }
 
   normalise() {
     const s = this.length();
@@ -83,7 +103,6 @@ export class Vector {
   }
 
   /**
-   *
    * @param {Vector} normal
    */
   reflect(normal) {

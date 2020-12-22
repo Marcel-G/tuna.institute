@@ -11,11 +11,12 @@ export class Tuna extends Polygon {
     super({
       position,
       height: 50,
-      width: 100,
+      width: 50,
       mass: 10,
       elasticity: 1
     });
-    this.av = Math.random();
+
+    this.a = Math.random() * 90;
   }
   /**
    * @private
@@ -27,19 +28,18 @@ export class Tuna extends Polygon {
     return Math.max(Math.min(number, limit), -limit);
   }
   update(delta) {
-    this.v.x += gravity.x;
-    this.v.y += gravity.y;
+    this.v = Vector.add(this.v, gravity).clamp(5);
 
-    this.av = this.clamp(this.av, 5);
-    this.v.x = this.clamp(this.v.x, 5);
-    this.v.y = this.clamp(this.v.y, 5);
+    // this.av = this.clamp(this.av, 5);
+    // this.v = this.v.clamp(5);
 
     this.a += this.av;
-    this.p.x += this.v.x;
-    this.p.y += this.v.y;
+    this.p = Vector.add(this.p, this.v);
+
     this.updateGeometry();
   }
   render(delta, context) {
+    this.updateGeometry();
     const [first, ...rest] = this.vertices;
     context.beginPath();
     context.moveTo(first.x, first.y);
@@ -47,6 +47,22 @@ export class Tuna extends Polygon {
       context.lineTo(vertex.x, vertex.y);
     }
     context.closePath();
+    context.strokeStyle = 'black';
+    context.fillStyle = 'black';
+    // context.fill()
+    context.stroke();
+  }
+
+  renderDebug(delta, context) {
+    this.updateGeometry();
+    const [first, ...rest] = this.vertices;
+    context.beginPath();
+    context.moveTo(first.x, first.y);
+    for (let vertex of rest) {
+      context.lineTo(vertex.x, vertex.y);
+    }
+    context.closePath();
+    context.strokeStyle = 'red';
     context.stroke();
   }
 }

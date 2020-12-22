@@ -70,6 +70,7 @@ export class Polygon extends Entity {
    * @returns {void}
    */
   applyImpact(impact, point) {
+    if (this.m === 0) return;
     // linear
     this.v = Vector.add(this.v, impact);
     
@@ -102,7 +103,7 @@ export class Polygon extends Entity {
     for (let i = 0; i < edges.length; i++) {
       // get axis
 
-      const axis = new Vector(-edges[i].normalise().y, edges[i].normalise().x);
+      const axis = edges[i].normalise().normal();
       // project polygon under axis
       const { min: minA, max: maxA, minPoint: minPointA, maxPoint: maxPointA } = this.projectInAxis(axis);
       const { min: minB, max: maxB, minPoint: minPointB, maxPoint: maxPointB } = polygon.projectInAxis(axis);

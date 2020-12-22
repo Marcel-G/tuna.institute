@@ -48,7 +48,7 @@ export class Entity {
   /**
    * Inertia
    */
-  i = 1;
+  i = 10000;
   /**
    * 
    * @param {Properties} properties 
@@ -83,6 +83,13 @@ export class Entity {
    * @param {CanvasRenderingContext2D} context
    */
   render(delta, context) {}
+
+  /**
+   * @abstract
+   * @param {number} delta 
+   * @param {CanvasRenderingContext2D} context
+   */
+  renderDebug(delta, context) {}
 
   /**
    * @abstract

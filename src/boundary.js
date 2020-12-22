@@ -9,7 +9,7 @@ export class Boundary extends Polygon {
     super({
       position,
       height: 10,
-      width: 500,
+      width: 1e10,
       mass: 0,
       elasticity: 0.1
     });
@@ -22,6 +22,7 @@ export class Boundary extends Polygon {
       context.lineTo(vertex.x, vertex.y);
     }
     context.closePath();
+    context.strokeStyle = 'black';
     context.stroke();
   }
 }

@@ -30,6 +30,7 @@ export class Game {
   }
 
   spawn(entity) {
+    if (!this.running) return;
     this.entities.push(entity);
   }
 
@@ -61,13 +62,20 @@ export class Game {
         }
       }
     }
-
-    for (const collision of this.collisions) {
-      Collision.resolveCollision(collision);
+    for (const entity of this.entities) {
+      entity.renderDebug(delta, this.context);
     }
+
+    // for (const collision of this.collisions) {
+    //   Collision.resolveCollision(collision);
+    // }
 
     for (const collision of this.collisions) {
       Collision.correctPosition(collision);
+    }
+
+    for (const entity of this.entities) {
+      entity.render(delta, this.context);
     }
 
     for (const collision of this.collisions) {
@@ -75,10 +83,6 @@ export class Game {
     }
 
     this.collisions = [];
-
-    for (const entity of this.entities) {
-      entity.render(delta, this.context);
-    }
 
     if (this.running) {
       requestAnimationFrame(this.loop.bind(this));
