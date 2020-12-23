@@ -30,12 +30,8 @@ export class Polygon extends Entity {
       throw new Error("Only polygons supported.");
     }
     return vertices.map((current, index) => {
-      const next = vertices[index + 1];
-      if (!next) {
-        const first = vertices[0];
-        return new Vector(first.x - current.x, first.y - current.y);
-      }
-      return new Vector(next.x - current.x, next.y - current.y);
+      const next = vertices[index + 1] || vertices[0];
+      return Vector.sub(next, current);
     });
   }
   buildVertices() {
@@ -83,97 +79,84 @@ export class Polygon extends Entity {
   }
   /**
    * @param {Polygon} polygon
-   * @returns {Contact | false}
+   * @returns {{ distance: number, normal: Vector, point: Vector}}
    */
-  testWith(polygon) {
+  getClosestSupportingPoint(polygon) {
     const shortest = {
       distance: -Infinity,
       normal: null,
       point: null
     };
-    // get all edges
-    const edges = [];
     for (let i = 0; i < this.edges.length; i++) {
-      edges.push(this.edges[i]);
-    }
-    for (let i = 0; i < polygon.edges.length; i++) {
-      edges.push(polygon.edges[i]);
-    }
-    // build all axis and project
-    for (let i = 0; i < edges.length; i++) {
-      // get axis
-
-      const axis = edges[i].normalise().normal();
-      // project polygon under axis
-      const { min: minA, max: maxA, minPoint: minPointA, maxPoint: maxPointA } = this.projectInAxis(axis);
-      const { min: minB, max: maxB, minPoint: minPointB, maxPoint: maxPointB } = polygon.projectInAxis(axis);
-      const distance = this.intervalDistance(minA, maxA, minB, maxB);
-      const point = i > this.edges.length -1
-        ? this.pointSelection(minA, minB, maxPointA, minPointA)
-        : this.pointSelection(minA, minB, minPointB, maxPointB);
-      if (distance > 0) {
-        return false;
-      } else if (distance > shortest.distance) {
-        shortest.distance = distance;
-        shortest.normal = axis.normalise();
-        shortest.point = new Vector(
-          point.x + (shortest.normal.x * distance),
-          point.y + (shortest.normal.y * distance)
-        );
+      const edge = this.edges[i];
+      const edgePointA = this.vertices[i];
+      const shortestTmp = {
+        distance: 0,
+        normal: null,
+        point: null
+      };
+      const normal = Vector.scale(edge.normal().normalise(), -1);
+      let allPositive = true;
+      for (const vertex of polygon.vertices) {
+        const v = Vector.sub(vertex, edgePointA);
+        const projection = Vector.dot(normal, v);
+        if (projection < shortestTmp.distance) {
+          allPositive = false;
+          shortestTmp.distance = projection;
+          shortestTmp.normal = normal;
+          shortestTmp.point = vertex;
+        }
+      }
+      if (allPositive) {
+        return ({
+          distance: 0,
+          normal: null,
+          point: null
+        })
+      } else if (shortestTmp.distance > shortest.distance) {
+        shortest.distance = shortestTmp.distance;
+        shortest.normal = shortestTmp.normal;
+        shortest.point = shortestTmp.point;
       }
     }
     return shortest;
   }
+  /**
+   * @param {Polygon} polygon
+   * @returns {Contact | false}
+   */
+  testWith(polygon) {
+    const ab = this.getClosestSupportingPoint(polygon);
+    const ba = polygon.getClosestSupportingPoint(this);
 
- /**
-  * @private
-  * @param {Vector} axis
-  * @returns {{ min: number, max: number, minPoint: Vector, maxPoint: Vector }}
-  */
- projectInAxis(axis) {
-   let min = Infinity;
-   let max = -Infinity;
-   let minPoint = null;
-   let maxPoint = null;
-   for (let i = 0; i < this.vertices.length; i++) {
-     const projection =
-       Vector.dot(this.vertices[i], axis) / axis.length();
-     if (projection > max) {
-       max = projection;
-       maxPoint = this.vertices[i]
-     }
-     if (projection < min) {
-       min = projection;
-       minPoint = this.vertices[i]
-     }
-   }
-   return { min, max, minPoint, maxPoint };
- }
+    if (ab.point == null || ba.point == null) {
+      return false
+    }
   
-  /**
-   * @private
-   * @param {number} minA 
-   * @param {number} maxA 
-   * @param {number} minB 
-   * @param {number} maxB 
-   */
-  intervalDistance(minA, maxA, minB, maxB) {
-    if (minA < minB) {
-      return minB - maxA;
+    const shortest = {
+      distance: -Infinity,
+      normal: null,
+      point: null,
+      a: null,
+      b: null,
+    };
+
+    if (ab.point != null) {
+      shortest.distance = ab.distance
+      shortest.normal = ab.normal
+      shortest.point = ab.point
+      shortest.a = this;
+      shortest.b = polygon;
     }
-    return minA - maxB;
-  }
-  /**
-   * @private
-   * @param {number} minA 
-   * @param {number} minB 
-   * @param {Vector} minPoint 
-   * @param {Vector} maxPoint 
-   */
-  pointSelection(minA, minB, minPoint, maxPoint) {
-    if (minA < minB) {
-      return minPoint;
+
+    if (ba.point != null && ba.distance > shortest.distance) {
+      shortest.distance = ba.distance
+      shortest.normal = ba.normal
+      shortest.point = ba.point 
+      shortest.a = polygon;
+      shortest.b = this;
     }
-    return maxPoint;
+    // get all edges
+    return shortest;
   }
 }

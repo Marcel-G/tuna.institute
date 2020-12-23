@@ -41,10 +41,10 @@ export class Collision {
   static checkCollision(entity1, entity2) {
     const result = entity1.testWith(entity2);
     if (!result) return false;
-    return new Collision(entity1, entity2, {
+    return new Collision(result.a, result.b, {
       position: result.point,
       normal: result.normal,
-      penetration: result.distance,
+      penetration: -result.distance,
     });
   }
 
@@ -53,7 +53,8 @@ export class Collision {
    * @returns {void}
    */
   static resolveCollision(collision) {
-    const { a, b } = collision;
+    const { a: b, b: a } = collision;
+
     const r1 = Vector.sub(collision.p, a.p);
     const vap1 = Vector.add(a.v, Vector.crossA(a.av, r1));
     const r2 = Vector.sub(collision.p, b.p);

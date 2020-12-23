@@ -21,11 +21,19 @@ const main = () => {
       game.start();
     }
   });
+  window.addEventListener('blur', () => {
+    game.stop();
+  })
+
+  window.addEventListener('focus', () => {
+    game.start();
+  })
 
   const game = new Game(canvas);
+  game.debug = true;
   game.start();
   game.spawn(
-    new Boundary(new Vector(canvas.clientWidth / 2, canvas.clientHeight - 100))
+    new Boundary(new Vector(canvas.clientWidth / 2, canvas.clientHeight + 10))
   );
   setInterval(() => {
     const offset = new Vector(Math.random() * canvas.clientWidth, 0);

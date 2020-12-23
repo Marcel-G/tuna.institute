@@ -5,6 +5,8 @@ import { Vector } from "./vector";
  * @property {number} distance
  * @property {Vector} normal
  * @property {Vector} point
+ * @property {Entity} a
+ * @property {Entity} b
  */
 
 /**
@@ -49,6 +51,11 @@ export class Entity {
    * Inertia
    */
   i = 10000;
+
+  /**
+   * Time spent out of view
+   */
+  outOfView = 0;
   /**
    * 
    * @param {Properties} properties 
@@ -66,6 +73,23 @@ export class Entity {
    */
   testWith(entity) {
     return false;
+  }
+
+  /**
+   * @param {Vector} view
+   * @param {Number} delta 
+   */
+  updateOutOfViewTimer(view, delta) {
+    if (
+      this.p.x > view.x ||
+      this.p.y > view.y ||
+      this.p.x < 0 ||
+      this.p.y < 0)
+    {
+      this.outOfView += delta;
+    } else {
+      this.outOfView = 0;
+    }
   }
 
   /**
