@@ -30,7 +30,7 @@ const main = () => {
   })
 
   const game = new Game(canvas);
-  game.debug = true;
+  // game.debug = true;
   game.start();
   game.spawn(
     new Boundary(new Vector(canvas.clientWidth / 2, canvas.clientHeight + 10))

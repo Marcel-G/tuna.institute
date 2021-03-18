@@ -17,9 +17,19 @@ export class Boundary extends Polygon {
   updateOutOfViewTimer() {
     // Preserve boundary even if out of view
   }
+  /**
+   * @abstract
+   * @param {number} delta 
+   * @param {CanvasRenderingContext2D} context
+   */
   render(delta, context) {
     // No need to render boundary.
   }
+  /**
+   * @abstract
+   * @param {number} delta 
+   * @param {CanvasRenderingContext2D} context
+   */
   renderDebug(delta, context) {
     const [first, ...rest] = this.vertices;
     context.beginPath();

@@ -26,6 +26,7 @@ export class Game {
   }
 
   start() {
+    if (this.running) return;
     this.running = true;
     this.lastFrame = new Date().getTime();
     this.loop(0);
@@ -89,6 +90,16 @@ export class Game {
       }
     }
 
+    if (this.debug) {
+      for (const entity of this.entities) {
+        entity.renderDebug(delta, this.context);
+      }
+  
+      for (const collision of this.collisions) {
+        collision.renderDebug(delta, this.context);
+      }
+    }
+
     /**
      * Update velocity / angularVelocity based on collisions.
      */
@@ -108,16 +119,6 @@ export class Game {
      */
     for (const entity of this.entities) {
       entity.render(delta, this.context);
-    }
-
-    if (this.debug) {
-      for (const entity of this.entities) {
-        entity.renderDebug(delta, this.context);
-      }
-  
-      for (const collision of this.collisions) {
-        collision.renderDebug(delta, this.context);
-      }
     }
 
     this.collisions = [];

@@ -44,7 +44,7 @@ export class Polygon extends Entity {
       new Vector(this.p.x - width, this.p.y + height),
     ];
 
-    const angle = (this.a * Math.PI) / 180;
+    const angle = this.a;
 
     return points.map((point) => {
       const x = Math.round(
@@ -68,14 +68,16 @@ export class Polygon extends Entity {
   applyImpact(impact, point) {
     if (this.m === 0) return;
     // linear
-    this.v = Vector.add(this.v, impact);
+    this.v = Vector.add(
+      this.v, Vector.scale(impact, 1 / this.m)
+    );
     
     // angular
     const angularImpact = Vector.crossV(
       Vector.sub(point, this.p),
       impact
     );
-    this.av += (angularImpact / 0.5);
+    this.av += (angularImpact / this.i);
   }
   /**
    * @param {Polygon} polygon

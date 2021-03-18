@@ -50,7 +50,7 @@ export class Entity {
   /**
    * Inertia
    */
-  i = 10000;
+  i = 1;
 
   /**
    * Time spent out of view

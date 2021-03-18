@@ -75,7 +75,7 @@ export class Collision {
     const massB = b.m || STATIC_MASS
 
     const totalMass =
-      1 / massA + 1 / massB + (raxn * raxn) / a.i + (rbxn * rbxn) / b.i;
+      (1 / massA) + (1 / massB) + ((raxn * raxn) / a.i) + ((rbxn * rbxn) / b.i);
     const j =
       (-(1 + restitution) * Vector.dot(relativeVelocity, collision.n)) /
       totalMass;
@@ -128,7 +128,7 @@ export class Collision {
     context.fill();
     context.beginPath();
     context.moveTo(this.p.x, this.p.y);
-    context.lineTo(this.p.x - this.n.x * this.d, this.p.y - this.n.y * this.d);
+    context.lineTo(this.p.x + this.n.x * this.d, this.p.y + this.n.y * this.d);
     context.strokeStyle = "red";
     context.stroke();
   }
