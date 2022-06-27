@@ -4,3 +4,6 @@ dist
 npm-debug.log
 .env
 .DS_Store
+
+# Local .terraform directories
+**/.terraform*
