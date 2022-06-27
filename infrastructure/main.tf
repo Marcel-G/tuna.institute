@@ -321,7 +321,7 @@ data "aws_iam_policy_document" "assume_deploy_role" {
 }
 
 resource "aws_iam_role" "gha_deploy_role" {
-  name = "gha_deploy_role"
+  name = "${var.org}-${var.repo-name}-gha-${terraform.workspace}"
 
   inline_policy {
     name   = "deploy_policy"
