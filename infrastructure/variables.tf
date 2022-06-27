@@ -20,7 +20,7 @@ variable "org" {
   type        = string
 }
 
-variable "repo_name" {
+variable "repo-name" {
   description = "Github repo name"
   type        = string
 }

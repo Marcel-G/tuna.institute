@@ -315,7 +315,7 @@ data "aws_iam_policy_document" "assume_deploy_role" {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
 
-      values = ["repo:${var.org}/${var.repo_name}:*"]
+      values = ["repo:${var.org}/${var.repo-name}:*"]
     }
   }
 }
