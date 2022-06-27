@@ -16,6 +16,12 @@ terraform {
   }
 }
 
+data "aws_caller_identity" "current" {}
+
+locals {
+  account_id = data.aws_caller_identity.current.account_id
+}
+
 provider "aws" {
   alias  = "us-east-1"
   region = "us-east-1"
