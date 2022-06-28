@@ -1,24 +1,28 @@
 import { Entity, Properties, Contact } from "./entity";
 import { Vector } from "./vector";
+export interface PolyProperties {
+  height: number;
+  width: number;
+}
 
-/**
- * @typedef {Object} PolyProperties
- * @property {number} height
- * @property {number} width
- */
+export interface ClosestPoint {
+  point: Vector | null;
+  distance: number;
+  normal: Vector | null
+}
 
-export class Polygon extends Entity {
+export abstract class Polygon extends Entity {
+  edges: Vector[];
+  vertices: Vector[];
   height = 10;
   width = 10;
-  /**
-   *
-   * @param {PolyProperties & Properties} properties
-   */
-  constructor(properties) {
+
+  constructor(properties: PolyProperties & Properties) {
     super(properties);
     this.width = properties.width;
     this.height = properties.height;
-    this.updateGeometry();
+    this.vertices = this.buildVertices();
+    this.edges = this.buildEdges();
   }
   updateGeometry() {
     this.vertices = this.buildVertices();
@@ -60,12 +64,8 @@ export class Polygon extends Entity {
       return new Vector(x, y);
     });
   }
-  /**
-   * @param {Vector} impact
-   * @param {Vector} point
-   * @returns {void}
-   */
-  applyImpact(impact, point) {
+
+  applyImpact(impact: Vector, point: Vector) {
     if (this.m === 0) return;
     // linear
     this.v = Vector.add(
@@ -79,20 +79,18 @@ export class Polygon extends Entity {
     );
     this.av += (angularImpact / this.i);
   }
-  /**
-   * @param {Polygon} polygon
-   * @returns {{ distance: number, normal: Vector, point: Vector}}
-   */
-  getClosestSupportingPoint(polygon) {
-    const shortest = {
+
+  getClosestSupportingPoint(polygon: Polygon): ClosestPoint {
+    let shortest: ClosestPoint = {
       distance: -Infinity,
       normal: null,
       point: null
     };
+
     for (let i = 0; i < this.edges.length; i++) {
       const edge = this.edges[i];
       const edgePointA = this.vertices[i];
-      const shortestTmp = {
+      const shortestTmp: ClosestPoint = {
         distance: 0,
         normal: null,
         point: null
@@ -116,49 +114,36 @@ export class Polygon extends Entity {
           point: null
         })
       } else if (shortestTmp.distance > shortest.distance) {
-        shortest.distance = shortestTmp.distance;
-        shortest.normal = shortestTmp.normal;
-        shortest.point = shortestTmp.point;
+        shortest = shortestTmp
       }
     }
     return shortest;
   }
-  /**
-   * @param {Polygon} polygon
-   * @returns {Contact | false}
-   */
-  testWith(polygon) {
+
+  testWith(polygon: Polygon): Contact | false {
     const ab = this.getClosestSupportingPoint(polygon);
     const ba = polygon.getClosestSupportingPoint(this);
 
-    if (ab.point == null || ba.point == null) {
+    if (ab.point == null || ba.point == null || ab.normal == null || ba.normal == null) {
       return false
     }
-  
-    const shortest = {
-      distance: -Infinity,
-      normal: null,
-      point: null,
-      a: null,
-      b: null,
-    };
 
-    if (ab.point != null) {
-      shortest.distance = ab.distance
-      shortest.normal = ab.normal
-      shortest.point = ab.point
-      shortest.a = this;
-      shortest.b = polygon;
+    if (ba.distance > ab.distance) {
+      return({
+        distance: ba.distance,
+        normal: ba.normal,
+        point: ba.point ,
+        a: polygon,
+        b: this,
+      })
     }
 
-    if (ba.point != null && ba.distance > shortest.distance) {
-      shortest.distance = ba.distance
-      shortest.normal = ba.normal
-      shortest.point = ba.point 
-      shortest.a = polygon;
-      shortest.b = this;
-    }
-    // get all edges
-    return shortest;
+    return({
+      distance: ab.distance,
+      normal: ab.normal,
+      point: ab.point,
+      a: this,
+      b: polygon,
+    });
   }
 }

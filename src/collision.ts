@@ -1,22 +1,22 @@
 import { Entity } from "./entity";
 import { Vector } from "./vector";
 
-/**
- * @typedef {Object} CollisionDetails
- * @property {Vector} position
- * @property {Vector} normal
- * @property {number} penetration
- */
 
 const STATIC_MASS = 1e10
+
+export interface CollisionDetails {
+  position: Vector;
+  normal: Vector;
+  penetration: number;
+}
 export class Collision {
-  /**
-   *
-   * @param {Entity} entity1
-   * @param {Entity} entity2
-   * @param {CollisionDetails} details
-   */
-  constructor(entity1, entity2, details) {
+  a: Entity;
+  b: Entity;
+  d: number;
+  n: Vector;
+  p: Vector;
+
+  constructor(entity1: Entity, entity2: Entity, details: CollisionDetails) {
     this.a = entity1;
     this.b = entity2;
     /**
@@ -33,12 +33,7 @@ export class Collision {
     this.d = details.penetration;
   }
 
-  /**
-   * @param {Entity} entity1
-   * @param {Entity} entity2
-   * @returns {Collision | false}
-   */
-  static checkCollision(entity1, entity2) {
+  static checkCollision(entity1: Entity, entity2: Entity): Collision | false {
     const result = entity1.testWith(entity2);
     if (!result) return false;
     return new Collision(result.a, result.b, {
@@ -48,11 +43,7 @@ export class Collision {
     });
   }
 
-  /**
-   * @param {Collision} collision
-   * @returns {void}
-   */
-  static resolveCollision(collision) {
+  static resolveCollision(collision: Collision) {
     const { a: b, b: a } = collision;
 
     const r1 = Vector.sub(collision.p, a.p);
@@ -86,11 +77,7 @@ export class Collision {
     b.applyImpact(Vector.scale(impact, -1), collision.p);
   }
 
-  /**
-   * @param {Collision} collision
-   * @returns {void}
-   */
-  static correctPosition(collision) {
+  static correctPosition(collision: Collision) {
     const { a, b } = collision;
 
     if (b.m === 0) {
@@ -106,22 +93,14 @@ export class Collision {
     }
   }
 
-  /**
-   * @param {Collision} entity
-   * @returns {boolean}
-   */
-  isEqual(entity) {
+  isEqual(entity: Collision) {
     return (
       (this.a === entity.a && this.b === entity.b) ||
       (this.b === entity.a && this.a === entity.b)
     );
   }
 
-  /**
-   * @param {number} delta
-   * @param {CanvasRenderingContext2D} context
-   */
-  renderDebug(delta, context) {
+  renderDebug(delta: number, context: CanvasRenderingContext2D) {
     context.fillStyle = "blue";
     context.beginPath();
     context.arc(this.p.x, this.p.y, 5, 0, 2 * Math.PI, true);

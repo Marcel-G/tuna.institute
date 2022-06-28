@@ -1,22 +1,20 @@
 import { Vector } from "./vector";
 
-/**
- * @typedef {object} Contact
- * @property {number} distance
- * @property {Vector} normal
- * @property {Vector} point
- * @property {Entity} a
- * @property {Entity} b
- */
+export interface Contact {
+  distance: number;
+  normal: Vector;
+  point: Vector;
+  a: Entity;
+  b: Entity;
+}
 
-/**
- * @typedef {object} Properties
- * @property {Vector} position
- * @property {number} mass
- * @property {number} elasticity
- */
+export interface Properties {
+  position: Vector;
+  mass: number;
+  elasticity: number;
+}
 
-export class Entity {
+export abstract class Entity {
   /**
    * Position vector
    */
@@ -56,30 +54,18 @@ export class Entity {
    * Time spent out of view
    */
   outOfView = 0;
-  /**
-   * 
-   * @param {Properties} properties 
-   */
-  constructor(properties) {
+
+  constructor(properties: Properties) {
     this.p = properties.position;
     this.m = properties.mass;
     this.e = properties.elasticity;
   }
 
-  /**
-   * @abstract
-   * @param {Entity} entity 
-   * @returns {Contact | false}
-   */
-  testWith(entity) {
+  testWith(entity: Entity): Contact | false {
     return false;
   }
 
-  /**
-   * @param {Vector} view
-   * @param {Number} delta 
-   */
-  updateOutOfViewTimer(view, delta) {
+  updateOutOfViewTimer(view: Vector, delta: number) {
     if (
       this.p.x > view.x ||
       this.p.y > view.y ||
@@ -92,32 +78,8 @@ export class Entity {
     }
   }
 
-  /**
-   * @abstract
-   * @param {Vector} impact
-   * @param {Vector} point
-   * @returns {void}
-   */
-  applyImpact(impact, point) {
-
-  }
-  /**
-   * @abstract
-   * @param {number} delta 
-   * @param {CanvasRenderingContext2D} context
-   */
-  render(delta, context) {}
-
-  /**
-   * @abstract
-   * @param {number} delta 
-   * @param {CanvasRenderingContext2D} context
-   */
-  renderDebug(delta, context) {}
-
-  /**
-   * @abstract
-   * @param {number} delta 
-   */
-  update(delta) {}
+  abstract applyImpact(impact: Vector, point: Vector): void
+  abstract render(delta: number, context: CanvasRenderingContext2D): void 
+  abstract renderDebug(delta: number, context: CanvasRenderingContext2D): void
+  abstract update(delta: number): void
 }

@@ -7,13 +7,10 @@ import { Vector } from "./vector";
 import { Boundary } from './boundary';
 
 const main = () => {
-  /**
-   * @type {HTMLCanvasElement} canvas
-   */
-  const canvas = document.getElementById("background-image");
-  const context = canvas.getContext("2d");
+  const canvas = document.getElementById("background-image")! as HTMLCanvasElement;
+  const context = (canvas as any).getContext("2d");
   context.fillStyle = "#ffc0cb";
-  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.fillRect(0, 0, (canvas as any).width, (canvas as any).height);
   document.addEventListener("click", () => {
     if (game.running) {
       game.stop();

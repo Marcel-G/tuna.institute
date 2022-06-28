@@ -3,24 +3,17 @@ import { Collision } from './collision';
 import { Vector } from './vector';
 
 export class Game {
-  canvas = null;
+  context: CanvasRenderingContext2D;
+  canvas: HTMLCanvasElement;
   running = false;
   debug = false;
   lastFrame = 0;
-  /**
-   * @type {Entity[]}
-   */
-  entities = [];
-  /**
-   * @type {Collision[]}
-   */
-  collisions = [];
-  /**
-   * @param {HTMLCanvasElement} canvas
-   */
-  constructor(canvas) {
+  entities: Entity[] = [];
+  collisions: Collision[] = [];
+
+  constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
-    this.context = canvas.getContext("2d");
+    this.context = canvas.getContext("2d")!;
     const scale = window.devicePixelRatio;
     this.context.scale(scale, scale);
   }
@@ -32,7 +25,7 @@ export class Game {
     this.loop(0);
   }
 
-  spawn(entity) {
+  spawn(entity: Entity) {
     if (!this.running) return;
     this.entities.push(entity);
   }
@@ -41,11 +34,7 @@ export class Game {
     this.running = false;
   }
 
-  /**
-   * @private
-   * @param {number} timestamp 
-   */
-  loop(timestamp) {
+  private loop(timestamp: number) {
     this.canvas.width = this.canvas.clientWidth;
     this.canvas.height = this.canvas.clientHeight;
 

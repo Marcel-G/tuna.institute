@@ -2,10 +2,7 @@ import { Polygon } from "./polygon";
 import { Vector } from "./vector";
 
 export class Boundary extends Polygon {
-  /**
-   * @param {Vector} position 
-   */
-  constructor(position) {
+  constructor(position: Vector) {
     super({
       position,
       height: 10,
@@ -14,23 +11,11 @@ export class Boundary extends Polygon {
       elasticity: 0.1
     });
   }
-  updateOutOfViewTimer() {
-    // Preserve boundary even if out of view
-  }
-  /**
-   * @abstract
-   * @param {number} delta 
-   * @param {CanvasRenderingContext2D} context
-   */
-  render(delta, context) {
-    // No need to render boundary.
-  }
-  /**
-   * @abstract
-   * @param {number} delta 
-   * @param {CanvasRenderingContext2D} context
-   */
-  renderDebug(delta, context) {
+  updateOutOfViewTimer() {}
+  render() {}
+  update() {}
+
+  renderDebug(delta: number, context: CanvasRenderingContext2D) {
     const [first, ...rest] = this.vertices;
     context.beginPath();
     context.moveTo(first.x, first.y);

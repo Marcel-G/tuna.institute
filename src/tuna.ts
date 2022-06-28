@@ -1,15 +1,13 @@
 import { Polygon } from './polygon';
 import { Vector } from './vector';
-// @ts-ignore
+// @ts-expect-error
 import tuna from 'url:../assets/tuna.png';
 
 const gravity = new Vector(0, 0.3);
 
 export class Tuna extends Polygon {
-  /**
-   * @param {Vector} position 
-   */
-  constructor(position) {
+  image: HTMLImageElement;
+  constructor(position: Vector) {
     super({
       position,
       height: 50,
@@ -22,16 +20,8 @@ export class Tuna extends Polygon {
     this.image = new Image();
     this.image.src = tuna;
   }
-  /**
-   * @private
-   * @param {number} number 
-   * @param {number} limit 
-   * @returns {number}
-   */
-  clamp(number, limit) {
-    return Math.max(Math.min(number, limit), -limit);
-  }
-  update(delta) {
+
+  update() {
     this.v = Vector.add(this.v, gravity).clamp(5);
 
     this.a += this.av;
@@ -40,12 +30,7 @@ export class Tuna extends Polygon {
     this.updateGeometry();
   }
 
-  /**
-   * @abstract
-   * @param {number} delta 
-   * @param {CanvasRenderingContext2D} context
-   */
-  render(delta, context) {
+  render(delta: number, context: CanvasRenderingContext2D) {
     this.updateGeometry();
     // const [first, ...rest] = this.vertices;
     // context.beginPath();
@@ -70,12 +55,7 @@ export class Tuna extends Polygon {
     context.restore();
   }
 
-  /**
-   * @abstract
-   * @param {number} delta 
-   * @param {CanvasRenderingContext2D} context
-   */
-  renderDebug(delta, context) {
+  renderDebug(delta: number, context: CanvasRenderingContext2D) {
     this.updateGeometry();
     const [first, ...rest] = this.vertices;
     context.beginPath();
