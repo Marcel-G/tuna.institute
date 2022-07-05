@@ -11,7 +11,10 @@ export class Boundary extends Polygon {
       elasticity: 0.1
     });
   }
-  updateOutOfViewTimer() {}
+  updateOutOfViewTimer(pos: Vector, delta: number) {
+    this.p = new Vector(pos.x / 2, pos.y + 10);
+    this.updateGeometry()
+  }
   render() {}
   update() {}
 
